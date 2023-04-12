@@ -3,6 +3,11 @@ import 'package:graduationproject/auth_screen.dart';
 import 'original_button.dart';
 import 'package:graduationproject/theme_manager';
 import 'package:graduationproject/themes.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+//import 'verification.dart';
+import'firebase_constant.dart';
+//import 'package:email_auth/email_auth.dart';
+import 'dart:async';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -11,6 +16,9 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final ThemeManager _themeManager = ThemeManager();
+  final user = FirebaseAuth.instance.currentUser;
+  final credential = FirebaseAuth.instance;
+
   var SelectedDay;
   var SelectedMonth;
   var SelectedYear;
@@ -376,10 +384,89 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           textColor: Colors.white,
                                           bgColor:
                                               Theme.of(context).backgroundColor,
-                                          onPressed: () {
+                                          onPressed: ()  async {
                                             if (_formKey.currentState!.validate()) {
-                                              print(_email);
-                                              print(_password);
+                                              
+// Navigator.of(context).pushNamed('verification');
+                                        
+                                              
+                                                try {
+                                                final credential =
+                                                    await FirebaseAuth
+                                                        .instance
+                                                        .createUserWithEmailAndPassword(
+                                                          
+                                                            email: _email,
+                                                            password:
+                                                                _password);
+                                                
+                                              
+  //credential.user!.sendEmailVerification();
+  Navigator.of(context).pop();
+  //print (credential.user!.emailVerified);
+                                              } 
+                                            
+                                              
+                                              on FirebaseAuthException catch (e) {
+                                                if (e.code == 'weak-password') {
+                                                  print(
+                                                      'The password provided is too weak.');
+                                                } else if (e.code ==
+                                                    'email-already-in-use') {
+                                                  print(
+                                                      'The account already exists for that email.');
+                                                      
+                                                }
+                                                return null;
+
+                                                /*isEmailVerified = FirebaseAuth.instance.currentUser!.emailVerified;
+  
+  if (!isEmailVerified ) {
+     
+    sendVerificationEmail();
+
+
+  }
+  Future sendVerificationEmail() async {
+try {
+final user = FirebaseAuth.instance.currentUser!; 
+await user.sendEmailVerification();
+}
+ catch (e) {
+  Utils.showSnackBar(e.toString());
+ }
+
+  }
+                  
+     */
+                                              } catch (e) {
+                                                print(e);
+                                                return null;
+                                              }
+                                              
+
+
+
+
+                                              
+
+
+
+
+
+
+
+
+
+
+
+                                              
+
+
+
+
+
+
                                             }
                                           },
                                         ),

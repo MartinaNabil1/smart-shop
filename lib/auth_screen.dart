@@ -2,19 +2,41 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:graduationproject/auth_form.dart';
 import 'package:graduationproject/original_button.dart';
 import 'package:graduationproject/register_screen.dart';
 import 'package:rive/rive.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+//import 'package:email_auth/utils/constants/firebase_constants.dart';
+//import 'package:email_auth/views/auth/email_verification_page.dart';
+import 'firebase_constant.dart';
+//import 'verification.dart';
+import 'forgot_password.dart';
 
 class AuthScreen extends StatefulWidget {
+  final user = FirebaseAuth.instance;
   @override
   State<AuthScreen> createState() => AuthScreenState();
 }
 
 class AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool isShowLoading = false;
+  late SMITrigger error;
+  late SMITrigger check;
+  late SMITrigger reset;
+  StateMachineController getRiveController(Artboard artboard) {
+    StateMachineController? controller =
+        StateMachineController.fromArtboard(artboard, 'State Machine 1');
+
+    artboard.addController(controller!);
+    return controller;
+  }
+
+
   final TextEditingController _passwordController = TextEditingController();
   bool showPassword = false;
+  
   String _email = '', _password = '';
 
   late RiveAnimationController btnAnimationController;
@@ -153,9 +175,9 @@ class AuthScreenState extends State<AuthScreen> {
                                                                     .hasMatch(
                                                                         value)) {
                                                                   return "Please enter a valid email";
-                                                                }
+                                                                } else {
                                                                 return null;
-                                                              },
+                                                              }},
                                                               decoration:
                                                                   const InputDecoration(
                                                                 labelText:
@@ -179,10 +201,13 @@ class AuthScreenState extends State<AuthScreen> {
                                                                       : true,
                                                               onChanged: (value) =>
                                                                   _password = value,
-                                                              validator: (value) =>
-                                                                  value!.length <= 6
-                                                                      ? 'Your password must be larger than 6 characters'
-                                                                      : null,
+                                                              validator: (value) {
+                                                                  if (value!.isEmpty) {
+                                                                     return "Please enter your password"; }
+                                                                      else {
+                                                                  return null;
+                                                                }
+                                                              },
                                                               decoration:
                                                                   InputDecoration(
                                                                 labelText:
@@ -208,7 +233,9 @@ class AuthScreenState extends State<AuthScreen> {
                                                               ),
                                                             ),
                                                             TextButton(
-                                                              onPressed: () {},
+                                                              onPressed: () {
+                                                                 Navigator.of(context).pushNamed('ForgotPassword');
+                                                              },
                                                               child: Text(
                                                                   "Forgot password?",
                                                                   style: Theme.of(
@@ -227,14 +254,159 @@ class AuthScreenState extends State<AuthScreen> {
                                                                       context)
                                                                   .backgroundColor,
                                                               onPressed: () {
-                                                                if (_formKey
-                                                                    .currentState!
-                                                                    .validate()) {
-                                                                  Navigator.of(
-                                                                          context)
-                                                                      .pushNamed(
-                                                                          'Home');
-                                                                }
+                                                                setState(() {
+                                                                  isShowLoading =
+                                                                      true;
+                                                                });
+                                                                Future.delayed(
+                                                                  Duration(
+                                                                      seconds:
+                                                                          1),
+                                                                  () async {
+                                                                    if (_formKey
+                                                                        .currentState!
+                                                                        .validate()) {
+                                                                  try {
+                                                                        UserCredential
+                                                                            userCredential =
+                                                                            await FirebaseAuth.instance.signInWithEmailAndPassword(
+                                                                                email: _email,
+                                                                                password: _password);
+
+                                                                                
+                                                                        
+
+                                                                        Future
+                                                                            .delayed(
+                                                                          Duration(
+                                                                              seconds: 2),
+                                                                          () {
+                                                                            setState(() {
+                                                                              isShowLoading = false;
+                                                                            });
+
+                                                                              if (userCredential.user!.emailVerified) {
+                                                                                check
+                                                                            .fire();
+                                                                            Navigator.of(context).pushNamed('Home');
+              
+
+
+
+            
+
+                                                                              }
+                                                                              else {
+error.fire();
+
+                                                                              }
+
+
+                                                                          },
+                                                                        );
+                                                                      } 
+                                                                      
+                                                                      
+                                                                      
+                                                                      
+                                                                      
+                                                                      on FirebaseAuthException catch (e) {
+                                                                        if (e.code ==
+                                                                            'user-not-found') {
+                                                                          //ScaffoldMessenger.of(context)
+                                                                          // .showSnackBar(SnackBar(
+                                                                          // content:
+                                                                          //   Text('No user Found with this Email'),
+                                                                          //  ));
+                                                                          error
+                                                                              .fire();
+                                                                          Future
+                                                                              .delayed(
+                                                                            Duration(seconds: 2),
+                                                                            () {
+                                                                              setState(() {
+                                                                                isShowLoading = false;
+                                                                              });
+                                                                            },
+                                                                          );
+                                                                        } else if (e.code ==
+                                                                            'wrong-password') {
+                                                                          //  ScaffoldMessenger.of(context)
+                                                                          //.showSnackBar(SnackBar(
+                                                                          //content:
+                                                                          // Text('Wrong Password'),
+                                                                          //  ));
+                                                                          error
+                                                                              .fire();
+                                                                          Future
+                                                                              .delayed(
+                                                                            Duration(seconds: 2),
+                                                                            () {
+                                                                              setState(() {
+                                                                                isShowLoading = false;
+                                                                              });
+                                                                            },
+                                                                          );
+                                                                        }
+                                                                      }
+
+                                                                      //check
+                                                                      // .fire();
+                                                                      //// Future
+                                                                      // .delayed(
+                                                                      //Duration(
+                                                                      //   seconds:
+                                                                      //       2),
+                                                                      // () {
+                                                                      //   setState(
+                                                                      //      () {
+                                                                      //   isShowLoading =
+                                                                      //     false;
+                                                                      // });
+                                                                      // },
+                                                                      //);
+
+                                                                      
+                                                                    } 
+                                                                    
+                                                                    
+                                                                    
+                                                                    else {
+                                                                      error
+                                                                          .fire();
+                                                                      Future
+                                                                          .delayed(
+                                                                        Duration(
+                                                                            seconds:
+                                                                                2),
+                                                                        () {
+                                                                          setState(
+                                                                              () {
+                                                                            isShowLoading =
+                                                                                false;
+                                                                          });
+                                                                        },
+                                                                      );
+                                                                    }
+                                                                  },
+                                                                );
+                                                               
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                                                               },
                                                             ),
                                                           ],
@@ -260,7 +432,33 @@ class AuthScreenState extends State<AuthScreen> {
                                       Icons.close,
                                       color: Theme.of(context).iconTheme.color,
                                     ),)
-                                  ))
+                                  )),
+isShowLoading
+                                            ? CustomPosintioned(
+                                                child: RiveAnimation.asset(
+                                                  "assets/rive/checkerror.riv",
+                                                  onInit: (artboard) {
+                                                    StateMachineController
+                                                        controller =
+                                                        getRiveController(
+                                                            artboard);
+                                                    check = controller.findSMI(
+                                                        "Check") as SMITrigger;
+                                                    error = controller.findSMI(
+                                                        "Error") as SMITrigger;
+                                                    reset = controller.findSMI(
+                                                        "Reset") as SMITrigger;
+                                                  },
+                                                ),
+                                              )
+                                            : SizedBox(),
+
+
+
+
+
+
+
                                       ],
                                     );
                                     },)),
@@ -337,6 +535,30 @@ class AuthScreenState extends State<AuthScreen> {
               ],
             ),
           ))
+        ],
+      ),
+    );
+  }
+}
+class CustomPosintioned extends StatelessWidget {
+  const CustomPosintioned({super.key, required this.child, this.size = 100});
+  final Widget child;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Column(
+        children: [
+          Spacer(),
+          SizedBox(
+            height: size,
+            width: size,
+            child: child,
+          ),
+          Spacer(
+            flex: 1,
+          ),
         ],
       ),
     );
