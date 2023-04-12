@@ -36,6 +36,8 @@ dependencies:
   rive: ^0.10.3
   firebase_core: ^2.8.0
   firebase_auth: ^4.3.0
+  email_auth: ^1.0.0
+  firebase_messaging: ^14.3.0
   shared_preferences: ^2.0.20
   provider: ^6.0.5
   url_launcher: ^6.1.10
@@ -52,6 +54,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+
+dependency_overrides:
+  firebase_messaging_platform_interface: ^4.2.16
+  cloud_firestore_web: ^3.3.5
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
